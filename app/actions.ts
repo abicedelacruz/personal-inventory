@@ -11,45 +11,48 @@ async function getSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
-        getAll() { return cookieStore.getAll() },
+        getAll() {
+          return cookieStore.getAll()
+        },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          } catch {}
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // Handled in Middleware / Server Components
+          }
         },
       },
     }
   )
 }
 
-export async function addItem(formData: FormData) {
+export async function addInventoryItem(formData: FormData) {
   const supabase = await getSupabase()
+  
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
+  if (!user) throw new Error('Not authenticated')
 
   const item_name = formData.get('item_name') as string
   const description = formData.get('description') as string
-  const quantity = parseInt(formData.get('quantity') as string) || 1
+  const serial_number = formData.get('serial_number') as string
 
-  if (!item_name) return
+  const { error } = await supabase.from('inventory').insert([
+    {
+      user_id: user.id,
+      item_name,
+      description,
+      serial_number,
+    },
+  ])
 
-  await supabase.from('inventory').insert({
-    item_name,
-    description,
-    quantity,
-    assigned_user_id: user.id,
-  })
+  if (error) {
+    console.error('Insert Error:', error)
+    throw new Error(error.message)
+  }
 
   revalidatePath('/')
 }
-
-export async function deleteItem(formData: FormData) {
-  const supabase = await getSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Unauthorized')
-
-  const id = formData.get('id') as string
-  await supabase.from('inventory').delete().eq('id', id).eq('assigned_user_id', user.id)
-
   revalidatePath('/')
 }
