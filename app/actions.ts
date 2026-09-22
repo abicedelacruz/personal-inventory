@@ -20,7 +20,7 @@ async function getSupabase() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Handled in Middleware / Server Components
+            // Handled in Middleware
           }
         },
       },
@@ -52,7 +52,5 @@ export async function addInventoryItem(formData: FormData) {
     throw new Error(error.message)
   }
 
-  revalidatePath('/')
-}
   revalidatePath('/')
 }
