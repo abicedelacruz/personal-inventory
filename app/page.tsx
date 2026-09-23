@@ -9,7 +9,9 @@ export default function Dashboard() {
   const [itemName, setItemName] = useState('')
   const [description, setDescription] = useState('')
   const [serialNumber, setSerialNumber] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
@@ -18,29 +20,32 @@ export default function Dashboard() {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
   )
 
-  useEffect(() => {
-    async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
-      setUser(user)
-
-      const { data } = await supabase
-        .from('inventory')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (data) setItems(data)
+  const loadData = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/login')
+      return
     }
+    setUser(user)
+
+    const { data, error } = await supabase
+      .from('inventory')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (data) setItems(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    setLoading(true)
     loadData()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
-    setLoading(true)
+    setSubmitting(true)
 
     const { error } = await supabase.from('inventory').insert([
       {
@@ -57,14 +62,19 @@ export default function Dashboard() {
       setItemName('')
       setDescription('')
       setSerialNumber('')
-      
-      const { data } = await supabase
-        .from('inventory')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (data) setItems(data)
+      await loadData()
     }
-    setLoading(false)
+    setSubmitting(false)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return
+    const { error } = await supabase.from('inventory').delete().eq('id', id)
+    if (error) {
+      alert('Failed to delete item: ' + error.message)
+    } else {
+      await loadData()
+    }
   }
 
   const handleSignOut = async () => {
@@ -72,90 +82,240 @@ export default function Dashboard() {
     router.push('/login')
   }
 
-  if (!user) return <div className="p-8 text-center text-gray-500">Loading profile...</div>
+  const filteredItems = items.filter(
+    (item) =>
+      item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.serial_number && item.serial_number.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+
+  if (loading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex items-center space-x-3 text-slate-500">
+          <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm font-medium">Loading workspace...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-lg shadow-sm border">
-        <div>
-          <h1 className="text-xl font-bold">Personal Property Inventory</h1>
-          <p className="text-sm text-gray-500">Logged in as: {user.email}</p>
+    <div className="min-h-screen bg-slate-50/50 text-slate-900">
+      {/* Top Header Navigation */}
+      <header className="sticky top-0 z-10 bg-white border-b border-slate-200/80 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white font-semibold text-sm">
+              IP
+            </div>
+            <div>
+              <h1 className="text-base font-semibold tracking-tight text-slate-900">
+                Property Inventory
+              </h1>
+              <p className="text-xs text-slate-500 hidden sm:block">
+                Asset & Hardware Tracking System
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <div className="text-right hidden sm:block">
+              <span className="block text-xs font-medium text-slate-700">Account</span>
+              <span className="block text-xs text-slate-500">{user?.email}</span>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="text-xs font-medium px-3 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handleSignOut}
-          className="text-sm text-red-600 hover:text-red-800 font-medium"
-        >
-          Sign Out
-        </button>
-      </div>
+      </header>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
-        <h2 className="text-lg font-semibold mb-4">Add Item to Inventory</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-            <input
-              type="text"
-              required
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              placeholder="e.g. Dell XPS 15 Laptop"
-            />
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Metrics Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Items</span>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-3xl font-bold text-slate-900">{items.length}</span>
+              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                Active
+              </span>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description / Condition</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              placeholder="e.g. Good condition, minor scratches"
-            />
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Registered Owner</span>
+            <div className="mt-2 truncate">
+              <span className="text-sm font-semibold text-slate-800">{user?.email}</span>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Serial Number / Asset Tag</label>
-            <input
-              type="text"
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
-              className="w-full p-2 border rounded-md"
-              placeholder="e.g. SN-8839201"
-            />
+          <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">System Status</span>
+            <div className="mt-2 flex items-center space-x-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-sm font-semibold text-slate-800">Cloud Sync Active</span>
+            </div>
           </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white py-2.5 rounded-md font-semibold text-sm hover:bg-gray-800 disabled:opacity-50"
-          >
-            {loading ? 'Adding Item...' : 'Add to Inventory'}
-          </button>
-        </form>
-      </div>
+        {/* Form and Table Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Add Item Panel */}
+          <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200/80 shadow-sm p-6">
+            <h2 className="text-base font-semibold text-slate-900 mb-1">
+              Register New Property
+            </h2>
+            <p className="text-xs text-slate-500 mb-6">
+              Enter hardware, device, or item details below.
+            </p>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h2 className="text-lg font-semibold mb-4">Your Property List ({items.length})</h2>
-        {items.length === 0 ? (
-          <p className="text-gray-500 text-sm">No items added yet.</p>
-        ) : (
-          <div className="divide-y">
-            {items.map((item) => (
-              <div key={item.id} className="py-3 flex justify-between items-start">
-                <div>
-                  <p className="font-semibold text-gray-900">{item.item_name}</p>
-                  <p className="text-sm text-gray-600">{item.description || 'No description'}</p>
-                  {item.serial_number && (
-                    <p className="text-xs text-gray-400 mt-0.5">S/N: {item.serial_number}</p>
-                  )}
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 uppercase tracking-wider mb-1">
+                  Item Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all placeholder:text-slate-400"
+                  placeholder="e.g. MacBook Pro 16&quot;"
+                />
               </div>
-            ))}
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 uppercase tracking-wider mb-1">
+                  Serial / Tag Number
+                </label>
+                <input
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all placeholder:text-slate-400 font-mono"
+                  placeholder="e.g. C02G1024MD6M"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 uppercase tracking-wider mb-1">
+                  Description / Condition
+                </label>
+                <textarea
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all placeholder:text-slate-400"
+                  placeholder="e.g. M1 Max, 32GB RAM. Slight wear on palm rest."
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-lg text-sm transition-all shadow-sm disabled:opacity-50 flex items-center justify-center space-x-2"
+              >
+                {submitting ? (
+                  <span>Saving Item...</span>
+                ) : (
+                  <span>Add Property to Ledger</span>
+                )}
+              </button>
+            </form>
           </div>
-        )}
-      </div>
+
+          {/* Item List Panel */}
+          <div className="lg:col-span-8 bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  Property Ledger
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Your registered personal and company property items.
+                </p>
+              </div>
+
+              {/* Search input */}
+              <div className="w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Filter items..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+            </div>
+
+            {filteredItems.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 font-bold">
+                  !
+                </div>
+                <h3 className="text-sm font-medium text-slate-900">No items found</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {searchTerm ? 'No results match your search query.' : 'Use the form to add your first property item.'}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/70 border-b border-slate-100 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                      <th className="py-3 px-6">Item Details</th>
+                      <th className="py-3 px-6">Serial / Tag</th>
+                      <th className="py-3 px-6">Registered Date</th>
+                      <th className="py-3 px-6 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {filteredItems.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-slate-900">{item.item_name}</div>
+                          {item.description && (
+                            <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                              {item.description}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-4 px-6">
+                          {item.serial_number ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-700 border border-slate-200">
+                              {item.serial_number}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">—</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-xs text-slate-500">
+                          {new Date(item.created_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-xs text-slate-400 hover:text-rose-600 transition-colors font-medium px-2 py-1 rounded hover:bg-rose-50"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
