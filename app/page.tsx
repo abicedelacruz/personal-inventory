@@ -82,6 +82,36 @@ export default function Dashboard() {
     router.push('/login')
   }
 
+  const handleExportCSV = () => {
+    if (filteredItems.length === 0) {
+      alert('No data available to export.')
+      return
+    }
+
+    const headers = ['Item Name', 'Serial / Tag', 'Description', 'Date Registered']
+    
+    const escapeCsv = (str: string) => `"${(str || '').replace(/"/g, '""')}"`
+
+    const rows = filteredItems.map((item) => [
+      escapeCsv(item.item_name),
+      escapeCsv(item.serial_number),
+      escapeCsv(item.description),
+      escapeCsv(new Date(item.created_at).toLocaleDateString()),
+    ])
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    
+    const safeEmail = user?.email ? user.email.split('@')[0] : 'user'
+    link.setAttribute('href', url)
+    link.setAttribute('download', `inventory_report_${safeEmail}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const filteredItems = items.filter(
     (item) =>
       item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,7 +135,7 @@ export default function Dashboard() {
         input:focus, textarea:focus { outline: 2px solid #6366f1; outline-offset: -1px; }
       `}</style>
 
-      {/* Top Bar */}
+      {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerInner}>
           <div style={styles.brandGroup}>
@@ -154,9 +184,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Dashboard Grid */}
+        {/* Dashboard Content Grid */}
         <div style={styles.contentGrid}>
-          {/* Add Item Panel */}
+          {/* Form */}
           <div style={styles.formCard}>
             <h2 style={styles.cardTitle}>Add Item to Ledger</h2>
             <p style={styles.cardSub}>Submit hardware or personal property tags.</p>
@@ -212,20 +242,26 @@ export default function Dashboard() {
             </form>
           </div>
 
-          {/* Item Table Panel */}
+          {/* Table Area */}
           <div style={styles.tableCard}>
             <div style={styles.tableHeader}>
               <div>
                 <h2 style={styles.cardTitle}>Property Inventory</h2>
                 <p style={styles.cardSub}>Real-time records for your logged account.</p>
               </div>
-              <input
-                type="text"
-                placeholder="Filter items..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.filterInput}
-              />
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Filter items..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.filterInput}
+                />
+                <button onClick={handleExportCSV} style={styles.exportBtn}>
+                  📥 Export CSV
+                </button>
+              </div>
             </div>
 
             {filteredItems.length === 0 ? (
@@ -259,7 +295,7 @@ export default function Dashboard() {
                           {item.serial_number ? (
                             <span style={styles.serialTag}>{item.serial_number}</span>
                           ) : (
-                            <span style={{ color: '#4b5563', italic: 'true' }}>—</span>
+                            <span style={{ color: '#4b5563', fontStyle: 'italic' }}>—</span>
                           )}
                         </td>
                         <td style={{ ...styles.td, color: '#9ca3af', fontSize: '0.8rem' }}>
@@ -310,7 +346,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   header: {
     borderBottom: '1px solid #1f2937',
     backgroundColor: '#090d16',
-    sticky: 'top',
+    position: 'sticky',
     top: 0,
     zIndex: 20,
   },
@@ -376,6 +412,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #374151',
     backgroundColor: '#111827',
     color: '#d1d5db',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  exportBtn: {
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.5rem',
+    border: '1px solid #4f46e5',
+    backgroundColor: 'rgba(79, 70, 229, 0.15)',
+    color: '#a5b4fc',
     fontSize: '0.75rem',
     fontWeight: 600,
     cursor: 'pointer',
@@ -520,9 +566,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '1rem',
   },
   filterInput: {
-    width: '12rem',
+    width: '11rem',
     padding: '0.5rem 0.75rem',
     backgroundColor: '#030712',
     border: '1px solid #374151',
