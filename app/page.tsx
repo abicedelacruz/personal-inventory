@@ -68,7 +68,7 @@ export default function Dashboard() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this item from your ledger?')) return
+    if (!confirm('Are you sure you want to remove this property entry?')) return
     const { error } = await supabase.from('inventory').delete().eq('id', id)
     if (error) {
       alert('Failed to delete item: ' + error.message)
@@ -91,42 +91,42 @@ export default function Dashboard() {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="flex items-center space-x-3 text-indigo-400">
-          <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-medium text-slate-300">Loading your portal...</span>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex items-center space-x-3 text-zinc-400 font-mono text-xs">
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>LOADING_PROFILE...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-20 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans antialiased selection:bg-white selection:text-black">
+      {/* Navbar */}
+      <header className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-600/30 text-base">
+            <div className="w-8 h-8 rounded bg-white flex items-center justify-center font-bold text-black text-xs tracking-wider">
               IP
             </div>
             <div>
-              <h1 className="text-sm font-bold tracking-tight text-white">
+              <h1 className="text-xs font-bold uppercase tracking-widest text-white font-mono">
                 AssetLedger
               </h1>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Personal Property & Asset Portal
+              <p className="text-[10px] text-zinc-500 font-mono hidden sm:block">
+                PROPERTY LEDGER SYSTEM
               </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
             <div className="text-right hidden sm:block">
-              <span className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider">User Account</span>
-              <span className="block text-xs font-medium text-slate-200">{user?.email}</span>
+              <span className="block text-[9px] font-mono font-semibold text-zinc-500 uppercase tracking-wider">Session</span>
+              <span className="block text-xs font-mono text-zinc-300">{user?.email}</span>
             </div>
             <button
               onClick={handleSignOut}
-              className="text-xs font-medium px-3.5 py-1.5 border border-slate-700/80 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-all"
+              className="text-xs font-mono px-3 py-1.5 border border-zinc-800 rounded bg-zinc-900 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all uppercase tracking-wider"
             >
               Sign Out
             </button>
@@ -137,29 +137,28 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Metric Overview Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-900/60 backdrop-blur-sm p-5 rounded-2xl border border-slate-800/80 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none"></div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Registered Items</span>
+          <div className="bg-zinc-950 p-5 rounded-lg border border-zinc-800 relative">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Total Registered Items</span>
             <div className="mt-2 flex items-baseline justify-between">
-              <span className="text-3xl font-extrabold text-white tracking-tight">{items.length}</span>
-              <span className="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                Audited & Verified
+              <span className="text-3xl font-mono font-bold text-white">{items.length}</span>
+              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800">
+                STATUS // ACTIVE
               </span>
             </div>
           </div>
 
-          <div className="bg-slate-900/60 backdrop-blur-sm p-5 rounded-2xl border border-slate-800/80 shadow-sm">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Account ID</span>
+          <div className="bg-zinc-950 p-5 rounded-lg border border-zinc-800">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Owner Account</span>
             <div className="mt-2 truncate">
-              <span className="text-sm font-semibold text-slate-200">{user?.email}</span>
+              <span className="text-xs font-mono text-zinc-200">{user?.email}</span>
             </div>
           </div>
 
-          <div className="bg-slate-900/60 backdrop-blur-sm p-5 rounded-2xl border border-slate-800/80 shadow-sm">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Database Link</span>
+          <div className="bg-zinc-950 p-5 rounded-lg border border-zinc-800">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Database Sync</span>
             <div className="mt-2 flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-sm font-semibold text-slate-200">Supabase RLS Active</span>
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              <span className="text-xs font-mono text-zinc-200">CONNECTED TO SUPABASE</span>
             </div>
           </div>
         </div>
@@ -167,138 +166,137 @@ export default function Dashboard() {
         {/* Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Add Item Form */}
-          <div className="lg:col-span-4 bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-xl">
+          <div className="lg:col-span-4 bg-zinc-950 rounded-lg border border-zinc-800 p-6">
             <div className="flex items-center space-x-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-              <h2 className="text-sm font-bold text-white tracking-tight">
-                Add Item to Ledger
+              <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+              <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                Register Property
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mb-6">
-              Enter hardware, serial tags, or personal property info.
+            <p className="text-xs text-zinc-500 mb-6">
+              Record hardware or asset details into your personal database.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Item Name <span className="text-rose-400">*</span>
+                <label className="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1.5">
+                  Item Name <span className="text-white">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={itemName}
                   onChange={(e) => setItemName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-                  placeholder="e.g. ThinkPad X1 Carbon"
+                  className="w-full px-3.5 py-2.5 text-sm bg-black border border-zinc-800 rounded text-white focus:outline-none focus:border-white transition-all font-mono placeholder:text-zinc-700"
+                  placeholder="e.g. MacBook Pro 16"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1.5">
                   Serial Number / Asset Tag
                 </label>
                 <input
                   type="text"
                   value={serialNumber}
                   onChange={(e) => setSerialNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-                  placeholder="e.g. SN-99023412"
+                  className="w-full px-3.5 py-2.5 text-sm bg-black border border-zinc-800 rounded text-zinc-200 font-mono focus:outline-none focus:border-white transition-all placeholder:text-zinc-700"
+                  placeholder="e.g. C02G1024MD6M"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1.5">
                   Description / Condition
                 </label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600 resize-none"
-                  placeholder="e.g. Core i7, 16GB RAM. Excellent condition."
+                  className="w-full px-3.5 py-2.5 text-sm bg-black border border-zinc-800 rounded text-white focus:outline-none focus:border-white transition-all font-mono placeholder:text-zinc-700 resize-none"
+                  placeholder="e.g. M1 Max, 32GB RAM. Slight mark on cover."
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 flex items-center justify-center space-x-2 mt-2"
+                className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 rounded text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center space-x-2 mt-2 font-mono"
               >
                 {submitting ? (
-                  <span>Saving Entry...</span>
+                  <span>Saving...</span>
                 ) : (
-                  <span>Register Property Item</span>
+                  <span>Add to Ledger</span>
                 )}
               </button>
             </form>
           </div>
 
-          {/* Ledger Table Section */}
-          <div className="lg:col-span-8 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-            <div className="p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Table Section */}
+          <div className="lg:col-span-8 bg-zinc-950 rounded-lg border border-zinc-800 overflow-hidden">
+            <div className="p-6 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-sm font-bold text-white tracking-tight">
-                  Personal Property Inventory
+                <h2 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                  Personal Property List
                 </h2>
-                <p className="text-xs text-slate-400">
-                  Real-time record of your registered property items.
+                <p className="text-xs text-zinc-500">
+                  Live inventory entries bound to your account.
                 </p>
               </div>
 
-              {/* Search box */}
+              {/* Filter box */}
               <div className="w-full sm:w-64">
                 <input
                   type="text"
-                  placeholder="Search item or serial #..."
+                  placeholder="Search item or serial..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs bg-slate-950 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600"
+                  className="w-full px-3.5 py-2 text-xs bg-black border border-zinc-800 rounded text-zinc-200 focus:outline-none focus:border-white font-mono placeholder:text-zinc-700"
                 />
               </div>
             </div>
 
             {filteredItems.length === 0 ? (
               <div className="p-12 text-center">
-                <div className="w-12 h-12 bg-slate-800/60 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3 font-bold text-lg">
-                  📦
+                <div className="text-zinc-600 font-mono text-sm mb-2">
+                  [NO_ENTRIES_FOUND]
                 </div>
-                <h3 className="text-sm font-semibold text-white">No property items registered</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  {searchTerm ? 'No items matched your search filter.' : 'Fill out the register form to record your first property item.'}
+                <p className="text-xs text-zinc-500">
+                  {searchTerm ? 'No results matched your filter query.' : 'Use the form on the left to add your first property item.'}
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-950/60 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      <th className="py-3.5 px-6">Item / Asset Details</th>
+                    <tr className="bg-black border-b border-zinc-800 text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                      <th className="py-3.5 px-6">Item / Details</th>
                       <th className="py-3.5 px-6">Serial / Tag</th>
                       <th className="py-3.5 px-6">Date Added</th>
                       <th className="py-3.5 px-6 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-xs">
+                  <tbody className="divide-y divide-zinc-900 text-xs font-mono">
                     {filteredItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-800/40 transition-colors group">
+                      <tr key={item.id} className="hover:bg-zinc-900/50 transition-colors">
                         <td className="py-4 px-6">
-                          <div className="font-semibold text-slate-100 text-sm">{item.item_name}</div>
+                          <div className="font-semibold text-zinc-100">{item.item_name}</div>
                           {item.description && (
-                            <div className="text-slate-400 text-xs mt-0.5 line-clamp-1">
+                            <div className="text-zinc-500 text-[11px] mt-0.5 line-clamp-1">
                               {item.description}
                             </div>
                           )}
                         </td>
                         <td className="py-4 px-6">
                           {item.serial_number ? (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md font-mono text-xs bg-slate-950 text-indigo-300 border border-slate-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] bg-black text-zinc-300 border border-zinc-800">
                               {item.serial_number}
                             </span>
                           ) : (
-                            <span className="text-slate-600 italic">—</span>
+                            <span className="text-zinc-700 italic">—</span>
                           )}
                         </td>
-                        <td className="py-4 px-6 text-slate-400">
+                        <td className="py-4 px-6 text-zinc-500 text-[11px]">
                           {new Date(item.created_at).toLocaleDateString(undefined, {
                             month: 'short',
                             day: 'numeric',
@@ -308,7 +306,7 @@ export default function Dashboard() {
                         <td className="py-4 px-6 text-right">
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="text-xs text-slate-500 hover:text-rose-400 transition-colors font-medium px-2 py-1 rounded-md hover:bg-rose-500/10"
+                            className="text-[11px] text-zinc-500 hover:text-white transition-colors uppercase tracking-wider"
                           >
                             Delete
                           </button>
