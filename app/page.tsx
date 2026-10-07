@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { exportToExcel } from './exportExcel';
 
-// Safe fallbacks to prevent build-time crashes
+// Supports both naming conventions so it connects instantly to your database
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default function Home() {
   const [session, setSession] = useState<any>(null);
@@ -97,7 +97,7 @@ export default function Home() {
     );
   }
 
-  // 1. SIGN IN SCREEN
+  // 1. SIGN IN SCREEN (If not logged in)
   if (!session) {
     return (
       <main className="min-h-screen bg-[#0A192F] flex flex-col justify-between p-6 md:p-12 text-slate-100 font-sans">
@@ -167,7 +167,7 @@ export default function Home() {
     );
   }
 
-  // 2. DASHBOARD SCREEN
+  // 2. DASHBOARD SCREEN (If logged in)
   const filteredItems = items.filter(item => 
     (item.item_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (item.serial_number || '').toLowerCase().includes(searchTerm.toLowerCase())
