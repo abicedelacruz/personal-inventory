@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { exportToExcel } from '@/utils/exportExcel';
+import { exportToExcel } from './exportExcel';
 
 export default function Dashboard() {
   const [items, setItems] = useState<any[]>([]);
