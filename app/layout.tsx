@@ -1,20 +1,20 @@
-import React from 'react'
+import './globals.css';
 
 export const metadata = {
-  title: 'Personal Property Inventory',
-  description: 'Employee Personal Property Inventory System',
-}
+  title: 'AssetLedger — ABIC, Inc.',
+  description: 'Enterprise Inventory System',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-100 min-h-screen">
+      <body className="bg-slate-100 text-slate-800 antialiased">
         {children}
       </body>
     </html>
-  )
+  );
 }
