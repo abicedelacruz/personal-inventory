@@ -25,7 +25,7 @@ export default function Home() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session) fetchItems();
+      if (session) fetchItems(session);
     });
 
     const {
@@ -33,16 +33,19 @@ export default function Home() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
-      if (session) fetchItems();
+      if (session) fetchItems(session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchItems = async () => {
+  // Fetch only the items belonging to the currently logged-in user
+  const fetchItems = async (currentSession = session) => {
+    if (!currentSession?.user?.id) return;
     const { data, error } = await supabase
       .from('inventory')
       .select('*')
+      .eq('user_id', currentSession.user.id)
       .order('created_at', { ascending: false });
     if (data) setItems(data);
   };
@@ -60,14 +63,17 @@ export default function Home() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!itemName) return;
+    if (!itemName || !session?.user?.id) return;
+    
     const { error } = await supabase.from('inventory').insert([
       {
         item_name: itemName,
         serial_number: serialNumber || '—',
-        description: description || 'N/A'
+        description: description || 'N/A',
+        user_id: session.user.id // Satisfies the database not-null constraint
       }
     ]);
+    
     if (!error) {
       setItemName('');
       setSerialNumber('');
