@@ -25,7 +25,7 @@ export default function Home() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session) fetchItems(session);
+      if (session) fetchItems();
     });
 
     const {
@@ -33,19 +33,17 @@ export default function Home() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setLoading(false);
-      if (session) fetchItems(session);
+      if (session) fetchItems();
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch only the items belonging to the currently logged-in user
-  const fetchItems = async (currentSession = session) => {
-    if (!currentSession?.user?.id) return;
+  // Fetch ALL inventory records across the company (Master View)
+  const fetchItems = async () => {
     const { data, error } = await supabase
       .from('inventory')
       .select('*')
-      .eq('user_id', currentSession.user.id)
       .order('created_at', { ascending: false });
     if (data) setItems(data);
   };
@@ -171,10 +169,11 @@ export default function Home() {
     );
   }
 
-  // 2. DASHBOARD SCREEN (If logged in)
+  // 2. DASHBOARD SCREEN (Master View - All Records)
   const filteredItems = items.filter(item => 
     (item.item_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.serial_number || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (item.serial_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.description || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -203,11 +202,11 @@ export default function Home() {
       <div className="max-w-7xl mx-auto p-8 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase">Total Items Registered</p>
+            <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase">Total Company Items</p>
             <div className="flex justify-between items-center mt-2">
               <span className="text-3xl font-bold text-[#0A192F]">{items.length}</span>
               <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Active Sync
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Master Sync
               </span>
             </div>
           </div>
@@ -279,8 +278,8 @@ export default function Home() {
           <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50">
               <div>
-                <h2 className="font-bold text-slate-900 text-base">Property Inventory</h2>
-                <p className="text-xs text-slate-500">Real-time records for your logged account.</p>
+                <h2 className="font-bold text-slate-900 text-base">Company Property Inventory</h2>
+                <p className="text-xs text-slate-500">Master record view for all company inputs.</p>
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
